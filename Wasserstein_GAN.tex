@@ -1,0 +1,32 @@
+\documentclass[uplatex, dvipdfmx]{jsarticle}
+
+    \usepackage{amsmath, amssymb, amsthm}
+    \usepackage{bm}
+    \usepackage{ascmac}
+    \usepackage[hiresbb]{graphicx}
+    \usepackage{algpseudocode, algorithm}
+    
+    \theoremstyle{definition}
+    \newtheorem{theorem}{定理}
+    \newtheorem*{theorem*}{定理}
+    \newtheorem{definition}[theorem]{定義}
+    \newtheorem*{definition*}{定義}
+    % プリアンブル
+    \title{Wassernstein GAN}
+    \author{Martin Arjovsky et al.}
+    \date{2017/1}
+    \begin{document}
+    \maketitle
+    \abovedisplayskip=10.0pt% plus 4.0pt minus 6.0pt 
+    \belowdisplayskip=10.0pt% plus 4.0pt minus 6.0pt % 
+    % \setlength{\abovedisplayskip}{10pt} % 上部のマージン
+    % \setlength{\belowdisplayskip}{5pt} % 下部のマージン      
+
+    \section{Introduction}
+    この論文が関係している問題は教師なし学習のそれである．主に問題は，確率分布を学習するということは
+    どういうことなのか？である．古典的な回答は，確率密度を学ぶ事ということである．これはよく，パラメトリックな分布族$(P_{\theta})$を
+    定義し，そしてデータにおいて尤度を最大にした$\theta$を見つけることによってなされる.
+
+
+    
+    \end{document}

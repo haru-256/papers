@@ -1,0 +1,99 @@
+\documentclass[uplatex, dvipdfmx]{jsarticle}
+
+    \usepackage{amsmath, amssymb, amsthm}
+    \usepackage{bm}
+    \usepackage{ascmac}
+    \usepackage[hiresbb]{graphicx}
+    \usepackage{algpseudocode, algorithm}
+    
+    \theoremstyle{definition}
+    \newtheorem{theorem}{定理}
+    \newtheorem*{theorem*}{定理}
+    \newtheorem{definition}[theorem]{定義}
+    \newtheorem*{definition*}{定義}
+    \title{Deconvolution and Checkerboard Artifacts}
+    \author{AUGUSTUS ODENA et al.}
+    \date{2016/10/17}
+
+    \begin{document}
+    \maketitle
+    \abovedisplayskip=10.0pt% plus 4.0pt minus 6.0pt 
+    \belowdisplayskip=10.0pt% plus 4.0pt minus 6.0pt % 
+    % \setlength{\abovedisplayskip}{10pt} % 上部のマージン
+    % \setlength{\belowdisplayskip}{5pt} % 下部のマージン       
+    \section{Deconvolution \& Overlap}
+    低解像度から高解像度な画像を生成しようとする時，一般に私たちはDeconvolution操作を用いる．
+    しかし，Deconvolutionはカーネルサイズがストライドで割り切れない時にuneven overlapを引き起こす．ネットワークは
+    原理的には慎重にuneven overlapを防ぐように重みを学習することができるが，実際にはネットワークは完全にこれを回避することに苦しむ．
+    また，overlap patternは二次元の場合がもっとも顕著である．二次元の場合，２つのoverlap patternがかけ合わされ，unevenessが
+    二乗されてしまうからである．
+
+    また，主に最近では多層のDeconvolution層を用いて一連の低解像度の描写から，繰り返しより大きな画像を作る．
+    これらの多層のDeconvolution層はartifactsを打ち消すことが可能だが，しばしばartifactsは組み合わされ様々な大きさのartifact
+    が作り出される．
+
+    ストライド1のDeconvolutionはうまくいったモデルの最終層に使われているのをしばしば目にする．これはartifactsを減らすのにかなり有効である．
+    They can remove artifacts of frequencies that divide their size, and reduce others artifacts of frequency less than their size.
+    また，Deconvolutionはより低い周波数のartifactsを生成してしまう．
+    
+    これらのartifactsは普通でない（平均的でない, 強い）色を出力するときに最も顕著である．ニューラルネットワークの層は主に
+    バイアス項を持っているため，平均的な色を出力するのは容易である．明るい赤の様な平均からかけ離れている色ほどDeconvolutionはより多くの貢献を必要とする．
+
+    \section{Overlap \& Learning}
+    理論上はモデルはuneven overlapとなる位置に出力が均一になるように注意深く書き込むことができるようになる．これは，特に相互作用している複数のチャンネル
+    を持っている時に成功するような，扱いにくい釣り合わせのための動作である．artifactを避けることは非常にフィルターの可能性を制限してしまう．
+    実際には，ニューラルネットワークはこれらのパターンを完全に避けようともがく．
+
+    それどころか，uneven overlapを持ちartifactを避けることができないモデルだけでなく，even overlapを持つモデルにおいても，しばしば似たようなartifactを
+    引き起こすカーネルを学習する．それはuneven overlapを持つモデルの通常の動作ではないが，even overlapはいとも簡単にartifactを引き起こす．
+
+    完全にartifactを避けることはフィルターに対して大きな制約をかけることになり，実際上いまだにartifactに対してマイルドなモデルでもartifactが現れる．
+    これにはおそらく沢山の要因がある．例えばGANにおいて１つの問題はDIscriminatorとその勾配についてだが，大きな問題はDeconvolutionにあると思われる．
+    最善の場合でも，簡単にartifactを作りだす関数を表現してしまうのでdeconvolutionは脆い（不安定）である．最悪の場合，deconvolutionは
+    常にartifactを作り出してしまう．
+
+    \section{Better Upsampling}
+    上記のようなartifactsを生成しないUpsamplingの一つ目の手法はカーネルサイズがストライドで割り切れるようにし，uneven overlapを避ける方法である．
+    これは最近提案されたsub-pixel convolution \cite{shi}と等しい．しかしこの手法ではまだ容易にartifactを作り出してしまう．
+
+    もう一つの手法は高解像度へのupsamplingと特徴量を計算するconvolutionとを切り離すことである．
+    例えば nearest-neighbor interpolation や bilinear interpolationを用いて画像をresizeしたのちconvolution層へ通す．これは自然な発想であり，
+    超解像においてうまくいった手法とだいたい似ている．deconvolutionとこのresize-convolutionは共に線形操作であり，行列として解釈することができる．
+    これは２つの違いを見るのに役立つ方法である．deconvolutionが各output windowに対して特定の入力を持つ場合，resize-convolutionは暗に
+    high frequency artifactsを抑える方法で，重み共有をしていることになる．
+
+    私たちはnearest-neighbor interpolationで最良の結果を得て，bilinear interpolationはうまくいかなかった．しかしこれは単に，
+    私たちのモデルにおいてnearest-neighbor interpolationがdeconvolutionのために最適化されたハイパーパラメターで偶然うまくいったことを意味している．
+    また，素朴に画像特徴のhigh-frequencyに強い耐性のあるbilinear interpolationを使用したことによって発生した問題であることをさしている．
+
+    \section{Image Generation Results}
+    私たちの実験ではnearest-neighbor interpolationが幅広い状況でうまくいった．この手法が有効であった１つのケースはGANである．
+    単にdeconvolution層を，nearest-neighbor interpolationの後にconvolutionが続く層に切り替えただけで様々な周波数のartifactが消えた．
+    実は，articfactに関する差は学習が行われる前に見られる．ランダムな重みで初期化されたgeneratorが作りだす画像に注目すると，私たちはartifactを見ることができる．
+
+    これはつまり，artifactは画像を生成する方法のせいであり，GANの学習方法の問題ではないことを示している．
+
+    私たちは様々な種類のモデルでartifactを確認し，upsampling方法にをresize-convolutionにり替えるとartifactがなくなるといことがわかった.
+    これらが先ほどのartifactがGAN特有ではないと言える証拠である．確認に使用した様々なモデルはcheckerboardに脆いことが判明した（特に，コスト関数が明示的に
+    checkerboardに対して明示的に耐性がない場合）．しかし，resize-convolutionを採用するとaritifactが消えた．
+
+    \section{Artifacts in Gradient}
+    convolution層の勾配を計算するときはいつでも，backward passにおいてdeconvolutionを行う．これは勾配において画像生成にdeconvolutionを使う時と同様に
+    checkerboard patternsを引き起こすことができてしまう．
+
+    私たちはいくつかのケースでcheckerboard patternsが起こるのを発見した．Generatorがcheckerboard patternsに対して
+    毛嫌いまたは偏愛している，どちらの場合でもない時，Discriminatorにおけるstrided convolutionはcheckerboard patternsを引き起こすことができる．
+
+    GANにおいてこのartifacts in Gradientが影響しているのかどうかはいまいちわからなかった．影響しているように捉えることができそう．
+
+    \section{Conclution}
+
+    % 参考文献
+    \newpage
+    \begin{thebibliography}{10}
+        \bibitem{shi}
+            Wenzhe Shi, et al., 
+            Real-Time Single Image and Video Super-Resolution Using an Efficient Sub-Pixel Convolutional Neural Network \\
+            https://arxiv.org/abs/1609.05158
+    \end{thebibliography}
+    \end{document}
