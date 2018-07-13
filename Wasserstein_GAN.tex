@@ -114,6 +114,20 @@
 
     \section{Different Distance}
 
+    \section{Standard GANの問題点}
+
+    \section{WGAN の改善点，利点}
+
+    \section{実装}
+    \begin{itembox}[l]{疑問点}
+        \begin{enumerate}
+            \item Lipschitz 関数であるために重み$w \in \mathcal{W}$に対して$[-0.01, 0.01]$等にweight clipping を行うが，この場合
+            Batch Normalizationの$\beta, \gamma$はどうすれば良いのか? こちらもまたweight clippingするべき?
+            なにやら，Clitic（Discriminator）にweight clippingを施すと学習が崩壊することもあるらしい．
+        \end{enumerate}
+        
+
+    \end{itembox}
     % 参考文
     \newpage
     \begin{thebibliography}{10}
