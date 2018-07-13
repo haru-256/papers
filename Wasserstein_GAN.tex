@@ -70,12 +70,61 @@
         と強い相関がある．
     \end{enumerate}
 
+    \begin{itembox}[l]{疑問点}
+        \begin{enumerate}
+            \item For this to make sense, we need the model density $P_{\theta}$
+            to exist. This is not the case in the rather common situation where we are dealing with distributions supported 
+            by low dimensional manifolds. It is then unlikely that the model manifold and the true distribution’s support have a non-negligible intersection 
+            (see \cite{Martin}), and this means that the KL distance is not defined (or simply infinite). 
+            
+            なぜ，モデルの多様体と真の分布のサポート
+            が無視できない交点を持つとKLは発散するのか．確かに2章のExample1は低次元多様体であり交点を持たない．その場合，KLは発散している．
+
+            \item First of all, unlike densities, this approach can represent distributions confined to a low dimensional manifold.
+
+            なぜ，低次元多様体に制限された分布を表現できるのか．また，低次元多様体の分布を表現しなければならないのは何故か．
+
+            \item A sequence of distributions $(\mathbb{P}_{t})_{t \in \mathbb{N}}$ converges if and only if there is a distribution $\mathbb{P}_{\infty}$ 
+            such that $\rho (\mathbb{P}_{t}, \mathbb{P}_{\infty})$ tends to zero, something that depends on how exactly the distance $\rho$ is defined. Informally, a distance 
+            $\rho$ induces a weaker topology  when it makes it easier for a sequence of distribution to converge.
+            
+            A sequence of distributions とは? また，収束しやすいとき$\rho$は弱位相を含むとはどういうことなのか．
+
+            \item The weaker this distance, the easier it is to define a continuous mapping from $\theta$-space to $\mathbb{P}_{\theta}$-space,
+             since it’s easier for the distributions to converge.
+
+            距離が弱いとはどういうことなのか．また，分布が収束しやすいため，距離が弱いと連続な$\theta$-space から $\mathbb{P}_{\theta}$-spaceへの
+            写像が定義しやすいとはどういうことなのか．
+
+            \item The main reason we care about the mapping $\theta  \longmapsto \mathbb{P}_{\theta}$ to be continuous is as follows. If 
+            $\rho$ is our notion of distance between two distributions, we would like to have a loss function $\theta \longmapsto \rho (\mathbb{P}_{\theta}, \mathbb{P}_{r})$
+            that is continuous, and this is equivalent to having the mapping $\theta \longmapsto \mathbb{P}_{\theta}$ 
+            be continuous when using the distance between distributions $\rho$. 
+
+            なぜ $\theta \longmapsto \mathbb{P}_{\theta}$ が連続ならば $\theta \longmapsto \rho (\mathbb{P}_{\theta}, \mathbb{P}_{r})$ も連続になるのか．
+            % \item In order to optimize the parameter $\theta$, it is of course desirable to define our model distribution 
+            % $\mathbb{P}_{\theta}$ in a manner that makes the mapping  $\theta  \longmapsto \mathbb{P}_{\theta}$continuous. 
+            % Continuity means that when a sequence of parameters $\theta_{t}$converges to $\theta$, the distributions 
+            % $\mathbb{P}_{\theta_t}$also converge to $\mathbb{P}_{\theta}$. However, it is essential to remember that the notion 
+            % of the convergence of the distributions $\mathbb{P}_{\theta_t}$ depends on the way we compute the distance between distributions.
+
+        \end{enumerate}
+        
+    \end{itembox}
+
+    \section{Different Distance}
+
     % 参考文
     \newpage
     \begin{thebibliography}{10}
         \bibitem{Radford}
         Radford M. Neal. Annealed importance sampling. 
         Statistics and Computing, 11(2):125–139, April 2001.
+
+        \bibitem{Martin}
+        Martin Arjovsky and L´eon Bottou.
+        Towards principled methods for training generative adversarial networks. I \\
+        https://arxiv.org/abs/1701.04862
     \end{thebibliography}
     
     \end{document}
