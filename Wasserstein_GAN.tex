@@ -119,11 +119,42 @@
     \section{WGAN の改善点，利点}
 
     \section{実装}
+
+    著者の実装について
+    \begin{enumerate}
+        \item $z$は opt.resize\_(opt.batchSize, nz, 1, 1).normal\_(0, 1)としてGenerater に与えている． 
+        \item 前処理: 画像をスケーリング($64\times64$等に)しCenterCrop() したのち，Normalize((0.5, 0.5, 0.5), (0.5,0.5, 0.5))で正規化している．つまり
+        各チャンネルごとに以下の数式で正規化している．
+        \begin{equation}
+            input[channel] = (input[channel] - mean[channel]) / std[channel]
+        \end{equation}
+        おそらく入力画像の画素値の取りうる範囲を$[-1, 1]$にしている．
+        \item 初期値: Conv系(Convolution, Transpose)は平均0 , 分散0.02 の正規分布にて設定される． 
+       また，Batch Normalizationの$\gamma$は平均1.0, 分散0.02の正規分布で初期化され，$\beta$は0で初期化される．
+
+       \item GeneratorはConvTranspose2dとBatchNormalization, ReLUを繰り返す構造をしている．詳しくはnotebook参照．
+
+       \item 論文では書いていないが，著者は
+       \begin{quotation}
+            The only addition to the code (that we forgot, and will add, on the paper) are the lines 163-166 of main.py.
+            These lines act only on the first 25 generator iterations or very sporadically (once every 500 generator iterations).
+            In such a case, they set the number of iterations on the critic to 100 instead of the default 5.
+            This helps to start with the critic at optimum even in the first iterations. There shouldn't be a major difference in performance,
+            but it can help, especially when visualizing learning curves (since otherwise you'd see the loss going up until the critic is properly trained).
+            This is also why the first 25 iterations take significantly longer than the rest of the training as well.
+        \end{quotation}
+        と言っているのに注意
+
+        \item また，コード$z$は平均0, 標準偏差1 の正規分布から取ってきている．
+    \end{enumerate}
     \begin{itembox}[l]{疑問点}
         \begin{enumerate}
             \item Lipschitz 関数であるために重み$w \in \mathcal{W}$に対して$[-0.01, 0.01]$等にweight clipping を行うが，この場合
             Batch Normalizationの$\beta, \gamma$はどうすれば良いのか? こちらもまたweight clippingするべき?
             なにやら，Clitic（Discriminator）にweight clippingを施すと学習が崩壊することもあるらしい．
+
+            \item $[−0.01,0.01] $を超えたものはclipされるため、初期値の分散が大きいと全て-0.01か0.01になる．よって重みの初期値をどう設定しているかが
+            重要になりそう．
         \end{enumerate}
         
 
