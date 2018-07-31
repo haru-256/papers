@@ -1,0 +1,102 @@
+
+\documentclass[uplatex, dvipdfmx]{jsarticle}
+
+    \usepackage{amsmath, amssymb, amsthm}
+    \usepackage{bm}
+    \usepackage{ascmac}
+    \usepackage[hiresbb]{graphicx}
+    \usepackage{algpseudocode, algorithm}
+    
+    \theoremstyle{definition}
+    \newtheorem{theorem}{定理}
+    \newtheorem*{theorem*}{定理}
+    \newtheorem{definition}[theorem]{定義}
+    \newtheorem*{definition*}{定義}
+    %%%%% argmax %%%%%
+    \makeatletter
+    \def\argmax{\mathop{\operator@font argmax}\limits}
+    \makeatother
+
+    %%%%% argmin %%%%%
+    \makeatletter
+    \def\argmin{\mathop{\operator@font argmin}\limits}
+    
+    % プリアンブル
+    \title{Taylor series}
+    \author{岡林}
+    \date{2018/7/31}
+    \begin{document}
+    \maketitle
+    \abovedisplayskip=10.0pt% plus 4.0pt minus 6.0pt 
+    \belowdisplayskip=10.0pt% plus 4.0pt minus 6.0pt % 
+    % \setlength{\abovedisplayskip}{10pt} % 上部のマージン
+    % \setlength{\belowdisplayskip}{5pt} % 下部のマージン      
+
+    \section{Abstract}
+    テイラー展開は，式の形は覚えているものの，収束半径やら導出等をいちいち忘れてしまうので，
+    メモ．
+
+    \section{1変数のテイラー展開}
+    \subsection{冪級数}
+    今，ある任意の関数$f(x)$を無限次元多項式で表そうとする．つまり，$f(x)$は以下のように表すことができるとする．
+    \begin{equation}
+        f(x) = a_0 + a_1 x + a_2 x^{2} + \cdots + a_n x^{n} + \cdots
+    \end{equation}
+    \cite{masema} P98 より，ある任意の関数$f(x)$の接線は以下のように表すことができる．
+
+    \begin{itembox}[l]{曲線の接線}
+        微分可能な曲線$y = f(x)$上の任意の点$(a, f(a))$における接線の方程式は，次式で表される．
+        \begin{equation}
+            y = f'(a) (x - a) + f(a)
+        \end{equation}
+    \end{itembox}
+    
+    これは任意の点$a$の周りの$x$について，関数$f(x)$を１次多項式で近似していることを表している．
+    次に２次多項式で近似してみることを考える．
+    \begin{equation}
+        f(x) \approx f(a) + f'(a) (x - a) + p (x-a)^{2} \qquad (x \fallingdotseq a の時) \label{eq:nizi}
+    \end{equation}
+    ここで，$p$ はある定数であるとする．この時，$p$がどんな値をとるか調べる．
+    \ref{eq:nizi}の両辺を$x$で二回微分し，係数比較を行うと
+    \begin{equation}
+        p = \frac{f^{(2)}(a)}{2}
+    \end{equation}
+    となることがわかる．同様に３次多項式，４次多項式で表そうとする．これを続け，無限次元多項式で関数を近似すると
+    \begin{equation}
+        f(x) \approx \sum_{n=0}^{\infty} \frac{f^{n}}{n!} (x-a)^{n} \qquad (x \fallingdotseq a の時) 
+    \end{equation}
+    となる．これを$f(x)$の点$a$周りでのテイラー展開と呼ぶ．
+    \subsection{テイラー展開}
+    前節でテイラー展開による関数近似
+    \begin{equation}
+        f(x) \approx \sum_{n=0}^{\infty} \frac{f^{n}}{n!} (x-a)^{n} \qquad (x \fallingdotseq a の時)
+    \end{equation}
+    を見てきた．ここで，右辺の$n \leqq k$の部分和を考える．
+    \begin{equation}
+       \sum_{n=0}^{k} \frac{f^{n}}{n!} (x-a)^{n} \qquad (x \fallingdotseq a の時)
+    \end{equation}
+    上式と関数$f(x)$のテイラー展開との差を考える．この差は近似式の関数$f(x)$との誤差と考えることができる．
+
+
+
+
+    
+    
+
+    % 参考文献
+    \newpage
+    \begin{thebibliography}{10}
+        \bibitem{masema}
+        馬場敬之 \\
+        微分積分 キャンパス・ゼミ マセマ出版
+
+        \bibitem{EMAN}
+        EMANの物理学 (テイラー級数) : http://eman-physics.net/math/taylor.html
+
+        \bibitem{Martin}
+        Martin Arjovsky and L'eon Bottou. \\
+        Towards principled methods for training generative adversarial networks. I \\
+        https://arxiv.org/abs/1701.04862
+    \end{thebibliography}
+    
+    \end{document}
