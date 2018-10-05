@@ -1,5 +1,7 @@
 # Wasserstein GAN (Arjovsky et al. 12/06/2017)
 
+https://arxiv.org/abs/1701.07875
+
 ## 1. どんなもの？
 
 この論文ではGANの枠組みにおいて，Generatorが最適化するコストをEarth Mover (EM) 距離
@@ -46,23 +48,67 @@ $$
 
 WGANのアルゴリズムは以下の通りになる．
 
-![](https://wiseodd.github.io/img/2017-02-04-wasserstein-gan/00.png)
+![](https://cdn-images-1.medium.com/max/2000/1*JOg9lC2JLl2Crmx5uk6S2g.png)
+
+論文では書いていないが，著者は実装において以下（[Github](https://github.com/martinarjovsky/WassersteinGAN#a-few-notes)より）のことをした．
+> The only addition to the code (that we forgot, and will add, on the paper) are the lines 163-166 of main.py. These lines act only on the first 25 generator iterations or very sporadically (once every 500 generator iterations). In such a case, they set the number of iterations on the critic to 100 instead of the default 5. This helps to start with the critic at optimum even in the first iterations. There shouldn’t be a major difference in performance, but it can help, especially when visualizing learning curves (since otherwise you’d see the loss going up until the critic is properly trained). This is also why the first 25 iterations take significantly longer than the rest of the training as well.
+
+また，著者は入力画像を $[-1, 1]$ に正規化している．さらに $p(\boldsymbol{z})$を $\mathcal{N} (0, 1)$ としている． 
 
 ## 4. どうやって有効だと検証した？
 
-実際に
+実際に画像生成の実験を行い，WGANが通常のGANよりも学習が安定すること（Improved stability），またCriticのロスがGeneratorの収束とサンプルの質とに相関があること（Meaningful loss metrics）を実験的に示した．
+
+**共通条件**
+
+- 使用したデータは [LSUN-Bedrooms ](http://www.yf.io/p/lsun)
+- 用いたベースラインは [DCGAN](https://arxiv.org/abs/1511.06434) （畳み込み構造を用い，Goodfellowが提案した通常のGANの最適化方法（$-\log{D} $ トリックを使用）を使用したモデル．）である．
+- 生成画像は３チャネルの 64x64 画像である．
+- すべての実験においてハイパーパラメータは Algorithm 1 で指定したものを使用.
+
+### Meaningful loss metrics
+**条件**
+
+- 使用したモデルは以下の3つ
+  1. DCGAN構造のWGAN
+  2. DCGAN構造のWGANで，Generatorを各層が512unitsで活性化関数がReLUの総層数 4層のMLPに置き換えたモデル．
+  3. DCGAN構造のWGANで，GeneratorとCritic を各層が512unitsで活性化関数がReLUの総層数 4層のMLPに置き換えたモデル．
+
+- 比較モデル
+  1. DCGAN構造のGAN
+  2. DCGAN構造のGANで，Generatorを各層が512unitsで活性化関数がReLUの総層数 4層のMLPに置き換えたモデル．
+  3. DCGAN構造のGANで，GeneratorとCritic を各層が512unitsで活性化関数がReLUの総層数 4層のMLPに置き換えたモデル．
+
+**結果**
+この実験では，Figure 3: のようにCriticのロスとGeneratorの収束とサンプルの質とに相関があることがわかった．同様のモデルで，Goodfellow 提案の最適化方法（JS がコスト）では Figure 4: のようにサンプルが良くなったとしても，JS 推定量は増加，または一定のままである．
+
+**結論**
+このことから，WGANでは Critic のロスとサンプルの質とに強い相関があり，ロスを基準にハイパーパラメータの調整などが行える．
+
+*注意*
+Critic のロスとサンプルの質とに強い相関があると言っても，他のモデルとの性能比較に使用できるわけではない．何故ならば， Wesserstein 距離の定数係数 $K$ の値はCritic のモデル自体に依存しているため，異なる構造のCriticとは比較することができない．
+
+### Improved stability
+
+WGANでは，Criticを最適値まで学習することができ，最適値ではCriticは単にGeneratorとデータの生成分布との距離を返すため，もはやGeneratorとDiscriminator（Critic）のバランスを取る必要がない．Criticがより良くなれば，Generatorによりhigh quality な勾配を与えることができる．
+
 
 ## 5. 議論はある？
 
+WGANの最適化方法では，CriticのOptimizerにモーメンタム項を使用した最適化手法（e.g Adam: $\beta_1 > 0$）や高い学習率を設定すると学習がうまくいかないことが観測された．そのため著者は RMSPropを用いている．
 
+これはCriticのロスが非定常であることが原因である．（これはcriticのパラメータ$w$がclampされるから？）
+
+
+
+パラメータ$w$がCriticを最適化する各イテレーションのたびにclampされるのはかなり強引！！
 
 ## 6. 次に読むべき論文は？
 
-
+[Improved Training of Wasserstein GANs](https://arxiv.org/abs/1704.00028)
+WGAN-gp を提案した論文．Criticのパラメータ$w$をclampせずにCriticがK-Lipschitzであるような制約を発見した．
 
 ## 参考文献
-
-Generative Adversarial Networks : Goodfellow  https://arxiv.org/abs/1406.2661
 
 [From GAN to WGAN](https://lilianweng.github.io/lil-log/2017/08/20/from-GAN-to-WGAN.html)
 
