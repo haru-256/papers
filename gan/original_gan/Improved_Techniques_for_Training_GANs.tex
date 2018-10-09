@@ -1,0 +1,153 @@
+\documentclass[uplatex, dvipdfmx]{jsarticle}
+
+    \usepackage{amsmath, amssymb, amsthm}
+    \usepackage{bm}
+    \usepackage{ascmac}
+    \usepackage[hiresbb]{graphicx}
+    \usepackage{algpseudocode, algorithm}
+    
+    \theoremstyle{definition}
+    \newtheorem{theorem}{定理}
+    \newtheorem*{theorem*}{定理}
+    \newtheorem{definition}[theorem]{定義}
+    \newtheorem*{definition*}{定義}
+    \begin{document}
+    \abovedisplayskip=10.0pt% plus 4.0pt minus 6.0pt 
+    \belowdisplayskip=10.0pt% plus 4.0pt minus 6.0pt % 
+    % \setlength{\abovedisplayskip}{10pt} % 上部のマージン
+    % \setlength{\belowdisplayskip}{5pt} % 下部のマージン       
+    \section{はじめに}
+    GANの最適解はナッシュ均衡として知られている．ここでいうナッシュ均衡とは，
+    DiscriminatorのLossがDIscriminatorのパラメータに関して最小であり，かつGeneratorのLossもGeneratorのパラメータに関して最小な点の事である.
+    従来のGANは，アルゴリズムが収束するという保証が無いGradient descent を使用していたためナッシュ均衡を得ることができなかった．しかし，GANのようなコスト関数が非凸であり，
+    パラメータが連続値かつ非常に高次元な場合で，ナッシュ均衡を求めるアルゴリズムは未だ知られていない．
+
+    Feature matching, Minibatch Discrimination はそんなGANに対して，収束を促進させるようにヒューリスティックに動機付けられた手法を提案している．
+    つまり，近似的に解を得ようとする発想である．
+    \section{Feature Matching}
+    feature matchingは現在のDiscriminatorに関してのovertrainingを防ぐ新しい目的関数を作ることで，GANの不安定さに対処する．
+    具体的には，GeneratorがDicriminatorの中間層の特徴量の期待値にマッチするように学習させる手法であり，以下のようにGeneratorの目的関数を定義する．
+    \begin{align}
+        \min_G \| \mathbb{E}_{\bm{x} \sim p_{data}} \bm{f}(\bm{x}) - \mathbb{E}_{\bm{z} \sim p_{\bm{z}}(\bm{z})} \bm{f} (G(\bm{z})) \|_2^2
+    \end{align}
+    ただし，$f(\bm{x})$はDiscriminatorの中間層の出力を表す．
+
+    Discriminatorはトレーニングによって，
+    本物か生成されたものかを最も判別可能な特徴量を見つけようとするので，この手法は自然な選択である．
+    オリジナルのGANのLossではデータ分布と全く同じになる最適解が存在したが，feature matching はGeneratorの損失関数に手を加えるため，
+    この最適解に達するかの保証はない．しかし，オリジナルでは不安定だったシチュエーションにおいて実験的に feature matching は効果的であったと言っている．
+
+    \begin{itembox}[l]{疑問点}
+        \begin{itemize}
+            \item feature matching を使うときのactivationとは活性化関数をかけた後のことを言っているのか．
+            \item feature matching を適用するときはどの層の出力後に適用すべきか．出力層前のConv Layerに適用するのが一般的?
+            \item feature matchingのLossに係数$\lambda$をかけ，通常のGeneratorのLossに加えるとどうなるのか?
+            \begin{equation*}
+                \min_G  \mathbb{E}_{\bm{z} \sim p_{\bm{z}}}\log D \left( G(\bm{z}_i) \right) + \lambda \| \mathbb{E}_{\bm{x} \sim p_{data}} \bm{f}(\bm{x}) - \mathbb{E}_{\bm{z} \sim p_{\bm{z}}(\bm{z})} \bm{f} (G(\bm{z})) \|_2^2
+            \end{equation*}
+        \end{itemize}
+    \end{itembox}
+    
+    Algorithm 1 に，Feature matchingのGeneratorの最適化アルゴリズムを示す．
+    \begin{algorithm}[H] 
+	 \caption{Feature Matching}
+	 \begin{algorithmic}[1]
+	  \Require{ $ \bm{x}_n ,n \in [N]$ : ミニバッチデータセット, $\bm{z}_n, n \in [N]$: コード}
+	  \Ensure{$ \bm{x}_n \in \mathbb{R}^D, \bm{z}_n \in \mathbb{R}^{100}$}
+	  \State{$f(\bm{x})$ :本物データをDiscminatorに入れ，適当な中間層(出力層の一つ手前など)の出力を得る}
+	  \State{$f\left(G(\bm{z})\right)$: コードをDiscminatorに入れ，適当な中間層(出力層の一つ手前など)の出力を得る}
+      \State{次の関数を計算し，最小化するように誤差逆伝播を行い最適化する． 
+          \begin{equation*}
+            \left\| \frac{1}{N}\sum_n \bm{f}(\bm{x_n}) - \frac{1}{N}\sum_n \bm{f} (G(\bm{z_n})) \right\|_2^2
+          \end{equation*}}
+	 \end{algorithmic}
+	\end{algorithm}
+
+    \section{Minibatch Discrimination}
+    GANの主な失敗の１つに，Generatorが常に同じ出力をだす mode collapse がある．これはDiscriinatorが各データを独立に
+    処理し，Generatorの出力が各データとより異なるようになれというメカニズムがないために引きおこされる問題である．
+    
+    このタイプの失敗を避けるのに適した方法は，Discriminatorに複数のデータを組み合わせて見せることを可能にさせ，以下のminibatch discrimination
+    を実行することである．
+
+    複数のデータを個別ではなく組み合わせてみるDiscriminatorは，Generatorのmode collapseを避けるのを助けることができるのかもしれない．
+    実際，DCGANの論文(by Radford)であった，batch normalizationの応用の成功はこの観点から，うまく説明することができる．
+    ミニバッチ内のデータの近さをモデリングする方法の１つは以下の通りである.
+
+    ミニバッチを$\bm{X} \in \mathbb{R}^{N \times D}$としたとき，ミニバッチの$n$番目のサンプル
+    $\bm{x}_n$を入れた時の，Discriminatorのある中間層の特徴ベクトルを$\bm{f}(\bm{x_n}) \in \mathbb{R}^{A}$とする．
+    そして，$\bm{f}(\bm{x_n})$にテンソル$T \in \mathbb{R}^{A \times B \times C}$をかけ，$M_n \in \mathbb{R}^{B \times C}$を得る．
+    $M_n$をc次元ん行ベクトルがB個並んだものと考え，行ごとに$n \in [N]$との$L_1$-distance をとる．
+    さらに，負の指数をとり，以下を得る．
+    \begin{equation}
+        c_b(\bm{x}_i, \bm{x}_j) = \exp\left(- \| M_{i, b} - M_{j, b} \|_{L_1} \right)
+    \end{equation}
+    ここで，$b \in [B], i, j \in [N]$である．minibatch discrimination layerの$\bm{x}_n$についての出力$o(x_n)$は他のミニバッチ内のデータ
+    全てとの和で定義される．
+    \begin{align}
+        o(\bm{x}_n)_b &= \sum_{j=1}^N c_b(\bm{x}_i, \bm{x}_j) \in \mathbb{R} \\
+        o(\bm{x}_n) &= \left[ o(\bm{x}_n)_1, o(\bm{x}_n)_2, \dots, o(\bm{x_n})_B \right] \in \mathbb{R}^{B} \\[6pt]
+        o(\bm{X})  &= \begin{pmatrix}
+            o(\bm{x}_1) \\[2pt]
+            o(\bm{x}_2) \\[2pt]
+            \vdots \\[2pt]
+            o(\bm{x}_N)
+        \end{pmatrix}\in \mathbb{R}^{N \times B}
+    \end{align}
+    最後に，minibatch discrimination layerの出力$o(\bm{x}_n)$と中間層の特徴ベクトル$\bm{f}(\bm{x_n})$とを
+    結合し，結果を次の層の入力として与える．この計算をGeneratorからのサンプルのミニバッチ内と学習データからの
+    サンプルのミニバッチ内でそれぞれ別々に行う．従来のように，Discriinatorは各データに対して，そのデータが
+    本物である確率を表す数字を出力するようにする．Discriminatorのタスクは実質的に，そのデータが本物かどうかを識別することである．
+    しかし，今ではサイド情報として，ミニバッチ内の他のサンプルを使うことができる．
+    Minibatch Discrimination は視覚的に魅力的なサンプルを素早く生成させることを可能にさせる．
+    Algorithm2. にMinibatch Discrimination のアルゴリズムを示す．
+    \begin{algorithm}[t] 
+        \caption{Minibatch Discrimination}
+        \begin{algorithmic}[1]
+         \Require{ $ \bm{x}_n ,n \in [N]$ : ミニバッチデータセット, $\bm{z}_n, n \in [N]$: コード}
+         \Ensure{$ \bm{X} \in \mathbb{R}^{N\times D}\text{: ミニバッチ}, \bm{x}_n \in \mathbb{R}^D, \bm{z}_n \in \mathbb{R}^{100}$}
+         \State{$\bm{f}(\bm{X}) \in \mathbb{R}^{N\times A}$ :ミニバッチデータをDiscminatorに入れ，適当な中間層(出力層の一つ手前など)の出力を得る}
+         \State{$\bm{f}(\bm{X})$の個々のデータ$\bm{f}(\bm{x}_n)$について以下のように$o(\bm{x}_n)$を計算する
+            \begin{align*}
+                M &= \bm{f}(\bm{x}_n) \cdot T \in \mathbb{R}^{B \times C} \\[2pt]
+                c_b (\bm{x}_n, \bm{x}_k) &= \exp(- \| M_{n, b} - M_{k, b}\|)  \in \mathbb{R}\\[2pt]
+                o(\bm{x}_n)_b &= \sum_{k=1}^N c_b(\bm{x}_n, \bm{x}_k) \in \mathbb{R} \\[2pt]
+                o(\bm{x}_n) &= \big[ o(\bm{x_n})_1, o(\bm{x_n})_2, \dots ,o(\bm{x_n})_B \big] \in \mathbb{R}^B 
+            \end{align*}}
+         \State{そして，$o(\bm{x}_n)$を行ベクトルとみなし，ミニバッチ全てについての結果$o(\bm{X})$を以下のようにする．
+             \begin{equation*}
+                o(\bm{X})  = \begin{pmatrix}
+                    o(\bm{x}_1) \\[2pt]
+                    o(\bm{x}_2) \\[2pt]
+                    \vdots \\[2pt]
+                    o(\bm{x}_N)
+                \end{pmatrix}\in \mathbb{R}^{N \times B}
+             \end{equation*}}
+         \State{最後に，$o(\bm{X})$を元の活性$f(\bm{X})$と結合させ，次の層に渡す}
+        \end{algorithmic}
+    \end{algorithm}
+
+    \section{Inception Score}
+    GANはモデル同士を比べる評価関数が十分でない．最も直感的で理解しやすい指標は，Annotator にサンプルの視覚的なクオリティを測ってもらうことである
+    Tim Salimans, et al. による論文\cite{salimans}では，GANのモデル比較のために，はじめはAmazon Mechanical Turkを用いて人に生成したデータが本物かどうかを
+    識別してもらい，その正解率を指標としていた．しかし，人による識別では問題設定，Annotatorのモチーベーションに左右されてしまう．
+    そこで Inception score を提案した．まず条件付き分布$p(y|x)$を得るために全ての生成画像にInception Modelを適用する．$y$はあるラベルを表す．論文ではTensorFlowの事前学習済みのモデルを使用した
+    \footnote{http://download.tensorflow.org/models/
+    image/imagenet/inception-2015-12-05.tgz.}．
+
+    意味のある画像ならば条件付き分布$p(y | \bm{x})$は，高い確率を持って識別されるため，低いエントロピーを持つはずである．また，私たちはモデルが多様な画像を
+    生成することを期待しているため，$\int_{\bm{z} \sim p_{\bm{z}}} p(y | \bm{x} = G(\bm{z})) dz$は低いエントロピーを持つはずである．以上２点を考慮すると，
+    Inception scoreは以下のように定義される．
+    \begin{equation}
+        \exp\left(\mathbb{E}_{\bm{z} \sim p_{\bm{z}}} KL\left( p(y | \bm{x}) || p(y) \right) \right)
+    \end{equation}
+    このInception scoreは人間の判断と強い相関ををもち，良い指標と言うことがわかった．また，この基準は多様性を測るので
+    十分に大きいデータ数(50000)で評価することが重要であるということもわかった．
+    % 参考文献
+    \newpage
+    \begin{thebibliography}{10}
+        \bibitem{salimans}
+            Tim Salimans, et al., Improved Techniqes for Training GANs \\
+            https://arxiv.org/abs/1606.03498
+    \end{thebibliography}
+    \end{document}
