@@ -6,7 +6,23 @@
 
 # 先行研究と比べてどこがすごい？
 
+## 先行研究（対象研究）
+
+- [Conditional GAN](https://arxiv.org/abs/1411.1784) ではone-hot vector をcodeに結合することで操作（物体を動かしたり，位置を変化させたりなど）を獲得していた．しかし，この方法では複雑で現実的な画像の関係のモデル化したとは言い難い．
+
+- 対して Image grammear Model ( [Zhu et a., 2007](http://www.stat.ucla.edu/~sczhu/papers/Reprint_Grammar.pdf), [Zhao & Zhu](https://papers.nips.cc/paper/4236-image-parsing-with-stochastic-scene-grammar.pdf) ) では画像の構造をモデル化する理にかなった方法を提供する．しかしながら，Grammar Model は表現力が乏しい．つまり，各物体の複雑な外観をモデル化できない．
+
+## 提案された手法
+
+提案された新しいフレームワークではGenerative Model と Grammar Model の利点をいいとこ取りしたもの．
+
 # 技術の手法のキモはどこ？
+
+Grammar Model を用いて物体の配置をモデル化し，Generative Model は generating texture （色や外形・輪郭に応じた他のprimitives）によって，構造情報と visual primitives （線など）の橋渡しをするために使われる．さらに，Detection Model を適用し，現在の画像に対して最も可能性が高く，有効な configuration を見つけることで画像から隠れ構造を推測する．
+
+**Fig1.** に提案手法のイラストが表されている．
+
+
 
 # どうやって有効だと検証した？
 
