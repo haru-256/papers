@@ -172,13 +172,16 @@ Fig 4. に示すようにVAE, [SN-GAN](https://arxiv.org/abs/1802.05957)と比�
 # 次に読むべき論文は？
 
 1. CARL DOERSCH, Tutorial on Variational Autoencoders : https://arxiv.org/pdf/1606.05908.pdf
-
    GANとは異なる生成モデルについて知るため．
-
 2. KINGMA, Glow: Generative Flow with Invertible 1x1 Convolutions : https://arxiv.org/abs/1807.03039
-
    リバーシブル（画像からコードが得られる）なモデルについて知っておきたいため．
-
 3. GULRAJANI, Improved Training of Wasserstein GANs : https://arxiv.org/abs/1704.00028
-
    WGAN の続きとして．
+4. SONG-CHUN ZHU and DAVID MUMFORD, A Stochastic Grammar of Images : http://www.stat.ucla.edu/~sczhu/papers/Reprint_Grammar.pdf
+   Stochastic Image Grammar モデルについて
+5. Image Generation from Scene Graphs : https://arxiv.org/abs/1804.01622
+   本論文とは違う視点（scene graphを条件とした構造つきGenerative Model） の論文．graph convolution を使用．
+6. PHILIPISOLA et al. Image-to-Image Translation with Conditional Adversarial Networks: https://arxiv.org/abs/1611.07004
+   pix2pix
+7. TING-CHUN WANG et al. High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs: https://arxiv.org/abs/1711.11585
+   pix2pixHD
