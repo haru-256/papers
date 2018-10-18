@@ -102,7 +102,7 @@ $$
 E^{*} = \underset{E}{\operatorname{argmax}} P_G (E|O)
 $$
 
-$E$は関係の集合，$O$ はオブジェクトの集合を意味する．MAP 推定を求めるため，MCMCが使われる．
+$E$は関係の集合，$O$ はオブジェクトの集合，そして$P_G(E|O)​$  は object instanceを与えられた元での関係の事後分布を意味する．MAP 推定を求めるため，MCMCが使われる．
 
 ## Pix2pix Model 
 
