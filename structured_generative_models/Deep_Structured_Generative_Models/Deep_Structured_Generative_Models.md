@@ -25,20 +25,84 @@ Grammar Model を用いて物体の配置をモデル化し，Generative Model �
 - sAOG: 構文木でシーンが表されている．パラメータは最尤推定によって学習される．
 
 Fig1., Fig2.  に提案手法のイラストが表されている．
-<img src="/Users/yohei/Documents/papers/structured_generative_models/Deep_Structured_Generative_Models/images/image_3.png" width=40% align="middle">
 
-<img src="/Users/yohei/Documents/papers/structured_generative_models/Deep_Structured_Generative_Models/images/image_2.png" width=100% align="middle">
+<img src="/Users/yohei/Documents/papers/structured_generative_models/Deep_Structured_Generative_Models/figures/fig3.png" width=40% align="middle">
+
+<img src="/Users/yohei/Documents/papers/structured_generative_models/Deep_Structured_Generative_Models/figures/fig2.png" width=100% align="middle">
+
+Fig2. A) に示すように本研究でのモデルは潜在変数モデルであり，同時分布は以下のように定式化される．
+
+$$
+P(X, G) =P_G (G) P_{X|G} (X| G)
+$$
+ここで，$X$ は画像データを表し，$ G$ は画像自体の構造を意味する．$P_G$ は構造の確率関数であり，$P_{X|G}$ 構造が与えられたもとでの画像の確率を表す．このモデルでは潜在変数 $G$ は sAOG によって定義され，そのサンプルは構文木 $g$ である．条件付き分布$P_{X|G}$は，
+
+$$
+P_{X|G} = P_{X|M}(X|m(G))
+$$
+とし，$m(\cdot)$ は構造 $G$ を2-D bounding box へと変換する関数である．そして$P_{X|M}$ は bounding box map をimage-to-image model を用いてrealistic image へと変換する．
 
 Stochastic And-Or Graph (sAOG) は3次元的配置と物体間の関係をモデル化するImage Grammer Model として使われる．
 
-## sAOG
+## Grammar Model (sAOG)
 
-Stochastic image grammar は画像の構造をモデル化する（通常，sAOGとして定式化される）確率的フレームワークである．
+### 詳細
 
-<img src="/Users/yohei/Documents/papers/structured_generative_models/Deep_Structured_Generative_Models/images/image_1.png" width=60% align="middle">
+Stochastic image grammar は画像の構造をモデル化する（通常，sAOGとして定式化される）確率的フレームワークである．sAOGは < S, V, R, E, P > の５つで定義される．
+
+1. S: 全体のシーンを表すルートノード
+2. V: 有限頂点集合, オブジェクトを表す終端ノード$V_T$ やより高レベル（抽象的）な構造を洗わす$V_N$ を含む．
+3. R: 生成規則の集合, 要素は特定の$V_N$ を$V$ の子ノードの列に分解する．
+4. $E \subset V \times V$ : ノード間の関係の集合．それぞれの関係のタイプは and-or graph のノード間のエッジのタイプで表される．
+5. P: 全ての有効な構文木（grammar model から生成されたグラフ）についての確率を定義する確率関数．
+
+sAOG はグラフで表現されるシーンの構造を学習し，その構造を，オブジェクトを射影することでbounding box へ変換する．
 
 
 
+Fig 3. に本論文で扱ったを図式化した． 
+
+<img src="/Users/yohei/Documents/papers/structured_generative_models/Deep_Structured_Generative_Models/figures/fig1.png" width=60% align="middle">
+
+scene structure $g$ は parse graph として表される．scene node $S$ は初めに scene configure を選ぶ．scene configure は[CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/)  でいうとscene内のオブジェクトの数を表す．scene configure は $n_s$個（sceneないの物体の数）のオブジェクトノード ${o_i}_{i=1}^{n_s}$ とカメラノード $c$ を子にもつ．物体間の関係（左にある，前にある）はノード間のエッジで表される． そして，各オブジェクトノードはそのオブジェクトの視覚的属性（色や形，物体の位置）を意味するinstance を子ノードにもつ．
+
+sAOGの構文木は以下のように定式化される．
+
+$$
+\begin{align}
+P_G(g) &= P_s(Ch_s) \prod_{o \in O_g} P_{o} (Ch_o) \times P_{\varepsilon}(g) \tag 1\\
+P_{\varepsilon}(g) &= \frac{1}{z} \exp(-\varepsilon(g))
+\end{align}
+$$
+
+ここで$P_S$ はscene configuration の確率であり，$P_o$ は あるオブジェクト $o$ についての object instance の確率を表す．そして$P_{\varepsilon}(g)$ は関係 $E_{g}$ と他の制約の上で定義された energy based distribution である．
+
+$$
+\varepsilon(g)  = \lambda_d \sum_{e \in E_{g}} \varepsilon_d (e) + \lambda_c \sum_{o \in O_{g}} \varepsilon_c (o) + \lambda_h \sum_{o \in O_{g}} \varepsilon_h (o)
+$$
+$\varepsilon_d (e), \varepsilon_c (o), \varepsilon_h (o)$ の意味は論文の式(3) の下 を参照．
+
+つまり，式(1) でのパラメータは $P_s, P_o, \lambda = [\lambda_d, \lambda_c, \lambda_h]$ である．
+
+### 学習
+
+パラメータ$P_s, P_o, \lambda = [\lambda_d, \lambda_c, \lambda_h]$ の学習は学習データより，以下のように最尤推定で行う．
+
+$$
+\max_{P_s, P_o, \lambda}  \sum_{g \in \mathcal{D}_g} \log P_G(g)
+$$
+
+$\lambda$ はcontractive divergence を使用し学習する．具体的なパラメータの更新ルールは，論文中の式(6), (7)で与えられる．
+
+### Infere Grammar from image
+
+画像から構造を推定するために，本研究では物体検出モデルを用いる．物体検出により3D location や 他の視覚的属性を求める．属性を持つオブジェクト集合$O$ が与えらた時，そのオブジェクト間の関係 $E^{*}​$は以下のようにMAP推定で求められる．
+
+$$
+E^{*} = \underset{E}{\operatorname{argmax}} P_G (E|O)
+$$
+
+$E$は関係の集合，$O$ はオブジェクトの集合を意味する．MAP 推定を求めるため，MCMCが使われる．
 
 ## Pix2pix Model 
 
@@ -50,7 +114,9 @@ Stochastic image grammar は画像の構造をモデル化する（通常，sAOG
 
 画像の生成，推論ともに，[CLEVR](https://cs.stanford.edu/people/jcjohns/clevr/) データセットを用いて実験した．
 
-## CLEVRデータセット
+## 実験設定
+
+### CLEVRデータセット
 
 - 学習データ数: 70000
 - 解像度: 480x320
@@ -60,12 +126,12 @@ Stochastic image grammar は画像の構造をモデル化する（通常，sAOG
 
 データの中身等の詳しいことは`tortoise7`の`~/Documents/tlab/data_CLEVR/CLEVR_v1_scenes.ipynb`へ
 
-## Detection Model
+### Detection Model
 
 - Detection (recognition) ModelとしてResNet-52構造のFaster-RCNNを使用．
 - 各物体の3次元配置の回帰を行うために，中間層1層で64の隠れ素子を持つMLPを使用．
 
-## Structure of GAN 
+### Structure of GAN 
 
 __Generator__
 - EncoderとDecoderがそれぞれ8のconvolutio blobck と deconvolution block を持つ [U-net](https://arxiv.org/abs/1505.04597) を使用．
@@ -90,9 +156,13 @@ $$
 ##画像の生成からの観点
 
 Fig 4. に示すようにVAE, [SN-GAN](https://arxiv.org/abs/1802.05957)と比較しても，提案手法は構造を持った画像を生成することができている．Fig 4.の E)に示すように Inference Network を用いると画像を構造情報まで落とし込むことができ，refinement network によって再び画像へと戻すことができる．これを利用すると480x320の画像を1KBに圧縮することができる．（もしくは，1KBで画像を圧縮することができる？）
+
+<img src="/Users/yohei/Documents/papers/structured_generative_models/Deep_Structured_Generative_Models/figures/fig4.png" width=100% align="middle">
+
 ## 条件付き生成からの観点
 提案手法には Image Grammar Model が埋め込まれているため，ある構造の条件を持った画像を生成することができる．Fig 5. では上下に5枚ずつ画像が並べられているが，これらは，各行で同じ属性（色，形）と関係を持たせた符号を用いて生成した画像である．
 
+<img src="/Users/yohei/Documents/papers/structured_generative_models/Deep_Structured_Generative_Models/figures/fig5_6.png" width=100% align="middle">
 
 
 # 議論はある？
