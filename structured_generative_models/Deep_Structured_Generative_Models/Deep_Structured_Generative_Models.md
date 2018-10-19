@@ -1,4 +1,11 @@
-# Deep Structured Generative Models （07/10/2018 Kun Xu et.al）
+# Deep Structured Generative Models
+
+# Info
+
+- Date: 07/10/2018
+- Authors: Kun Xu et al.
+- Jornal reference: ICML 2018 workshop on Theoretical Foundations
+  and Applications of Deep Generative Models, Stockholm
 
 # どんなもの？
 
