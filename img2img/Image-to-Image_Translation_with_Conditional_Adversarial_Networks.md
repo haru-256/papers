@@ -3,8 +3,8 @@
 # Info
 
 - Data : 11/ 2017
-- Authors : PHILLIP ISOLA,  JUN-YAN ZHU, et al. 
-- Journal reference: CVPR 2017 
+- Authors : PHILLIP ISOLA,  JUN-YAN ZHU, et al.
+- Journal reference: CVPR 2017
 
 # どんなもの？
 
@@ -17,6 +17,7 @@ image から image へ変換する問題設定（エッジマップからの色�
 # 技術の手法のキモはどこ？
 
 - GeneratorにはU-Net を Discriminator には PatchGAN というアーキテクチャを使用した．
+  <span style="color: red; ">詳細はウェブの別資料に記載したと言っているがどこ？</span>
 
 ## Objective
 
@@ -40,8 +41,31 @@ image から image へ変換する問題設定（エッジマップからの色�
 
 
 
-<img src="/Users/yohei/Documents/papers/img2img/figures/fig2.png" width=100% align="middle"> 
+<img src="/Users/yohei/Documents/papers/img2img/figures/fig2.png" width=100% align="middle">
 
+
+
+## Model Architecture
+
+### Generator
+__仮説__
+img2imgの問題では入力と出力では多くの低レベルな情報が共有される．例えば colorization では入力と出力では特徴的なエッジの位置を共有する．
+
+__工夫__
+このことを考慮して論文ではU-Net 構造に skip connection を各層 $i$ と $n-i$ の間につけた．skip connection は単に $i$ 層の出力と $n-i$ 層の入力とを全channel 毎に concatenate するものである．
+
+### Discriminator
+
+__仮説__
+以下のFig 4. の様に L1 や L2 ロスでもある程度の（低レベルな部分を捉えた）画像ができる．そこで GAN のDiscriminator には高レベルな特徴を捉えるため，局所的な画像にのみ注意を向ければ良い．
+
+__工夫__
+論文ではPatchGAN と呼ばれる方法を提案．この手法はDiscriminator に画像内の NxN のpatch について本物かどうかを判定させる．そして，このDiscmriminator を畳み込み的に画像全体に適用し，各 patchに対する出力を平均化したものを，最終的なDiscriminatorの出力とする．
+
+__検証結果__
+$N$ は画像の大きさよりもずっと小さくても良い画像を生成することが検証でわかった．より小さい PatchGAN はパラメータが少なく，より早く，任意の大きさの画像に適用することが可能である．
+
+<img src="/Users/yohei/Documents/papers/img2img/figures/fig4.png" width=100% align="middle">
 
 
 # どうやって有効だと検証した？
@@ -53,7 +77,7 @@ image から image へ変換する問題設定（エッジマップからの色�
 ## Objective
 
 - 実験ではDropout を適用することで出力$y$ に多様性を持たせようとした．しかし，Dropout を適用したのにも関わらず，それほど多様性を生むことができなかった．条件付き分布のフルエントロピーを得るようなcGAN を設計することは残された課題.
-- 
+-
 
 
 
