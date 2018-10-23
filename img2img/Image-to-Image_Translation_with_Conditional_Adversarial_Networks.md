@@ -41,7 +41,7 @@ image から image へ変換する問題設定（エッジマップからの色�
 
 
 
-<img src="/Users/yohei/Documents/papers/img2img/figures/fig2.png" width=100% align="middle">
+<img src="figures/fig2.png" width=100% align="middle">
 
 
 
@@ -65,7 +65,7 @@ __工夫__
 __検証結果__
 $N$ は画像の大きさよりもずっと小さくても良い画像を生成することが検証でわかった．より小さい PatchGAN はパラメータが少なく，より早く，任意の大きさの画像に適用することが可能である．
 
-<img src="/Users/yohei/Documents/papers/img2img/figures/fig4.png" width=100% align="middle">
+<img src="figures/fig4.png" width=100% align="middle">
 
 
 # どうやって有効だと検証した？
