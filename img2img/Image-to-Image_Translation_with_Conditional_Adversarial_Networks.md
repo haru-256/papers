@@ -130,3 +130,4 @@ photo generation の様な graphics task  や semantic segmentation の様な vi
 
   pix2pixHD
 
+- [Tensor flow の実行例](https://colab.research.google.com/github/tensorflow/tensorflow/blob/master/tensorflow/contrib/eager/python/examples/pix2pix/pix2pix_eager.ipynb)
