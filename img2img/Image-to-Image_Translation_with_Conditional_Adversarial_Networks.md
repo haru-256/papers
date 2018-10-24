@@ -10,14 +10,18 @@
 
 あらゆるimage から image へ変換する問題を，同一のアーキテクチャ，ロス関数で解決する手法を提案．
 
+
+
 # 先行研究と比べてどこがすごい？
 
 image から image へ変換する問題設定（エッジマップからの色付け，label map からの写真への変換など）は全て共通していたが，今までの手法はこれらの変換を個別の問題として考えていた．本論文ではimage から image へと変換する問題をimage-to-image translationとして定義し，どんな種類の画像変換タスクにおいても同じアーキテクチャ，アルゴリズムで対応可能な手法を提案した．
 
+
+
 # 技術の手法のキモはどこ？
 
 - GeneratorにはU-Net を Discriminator には PatchGAN というアーキテクチャを使用した．
-  <span style="color: red; ">詳細はウェブの別資料に記載したと言っているがどこ？</span>
+  <span style="color: red; ">詳細はウェブの別資料に記載したと言っているがどこ？</span> -> おそらく付録に書いてある．
 
 ## Objective
 
@@ -68,7 +72,46 @@ $N$ は画像の大きさよりもずっと小さくても良い画像を生成�
 <img src="figures/fig4.png" width=100% align="middle">
 
 
+
+## Optimization
+
+### Loss
+
+- Generatorの最適化に関しては，標準的なGAN（[Goodfellow](https://arxiv.org/abs/1406.2661)）に従い， $\log (1-D(x, G(x, z)))$ の最小化ではなく $\log(D(x, G(x, z))$ の最大化（ つまり，$- \log(D(x, G(x, z))$ の最小化）を行った．
+  $$
+  \underset{G}{\operatorname{argmin}} \ - \mathbb{E}_{x, z} [\log(D(x, G(x, z))]  + \mathbb{E}_{x, y, z} [\| y - G(x, z) \|_1]
+  $$
+
+- 加えて，Discriminator が Generator に対して学習が遅くなる様に，Discriminator を最適化中はロスを$1/2$ 倍した．[コード](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/models/pix2pix_model.py#L81-L82) によれば，Discriminator の最適化は以下の通り
+  $$
+  \underset{D}{\operatorname{argmax}} \ \mathbb{E}_{x, y} [\log D(x, y)] + \mathbb{E}_{x, z} [\log(1-D(x, G(x, z))]
+  $$
+  
+## Optimizer
+
+- 本論文では minibatch SGD を使い，Optimizer にはAdam を使用した．ハイパーパラメータとして，
+  learning rate: $0.0002$
+  momentum parameters: $\beta_1 = 0.5, \beta_2 = 0.999$ 
+
+## Inference
+
+- 推論時においても Generator はDropout を適用し，test batch での統計量を用いてBatch Norm を行う（学習時に計算された指数移動平均を用いない）．つまり，Generator は学習時と同じ振る舞いで推論を行う．
+
+- このbatch normalization についての方法は batch size を 1と設定すると [instance normalization](https://arxiv.org/abs/1607.08022) となり，先行研究より画像生成タスクにおいて効果的ということが分かっている．Instance Norm は以下の図を参照
+
+  <img src="https://blog.albert2005.co.jp/wp-content/uploads/2018/09/groupnorm-gn-zu.png" width=100% align="middle">
+
+- 本論文での実験ではbatch size  を実験に応じて <span style="color: red;"> 1 ~ 10 </span>の間で設定している．
+
+
+
 # どうやって有効だと検証した？
+
+photo generation の様な graphics task  や semantic segmentation の様な vision task を含む様々なデータで検証した．
+
+具体的なデータセットの一部は[ここ](https://drive.google.com/drive/u/1/folders/0B8OrLAOIArf4S3FkYzJMUS1JWmM) にある．
+
+- 小さなデータセットの時でさえ，まずまずな結果を得た．facade データでの実験では学習時間が２時間未満であり，全てのモデルにおいて推論にかかった時間は１秒未満であった．（使用GPU: Pascal Titan X １枚）
 
 
 
