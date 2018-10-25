@@ -113,7 +113,10 @@ photo generation の様な graphics task  や semantic segmentation の様な vi
 
 - 小さなデータセットの時でさえ，まずまずな結果を得た．facade データでの実験では学習時間が２時間未満であり，全てのモデルにおいて推論にかかった時間は１秒未満であった．（使用GPU: Pascal Titan X １枚）
 
-
+## 評価方法
+評価方法は以下の２つ
+1. AMT(Amazon Mechanical Turk) を用いた人による評価
+2. すでにある認識モデル（ResNet など）が物体を認識することができるほど十分に本物らしいかどうかを，測定することによる評価 -> Inception score と似ている．
 
 # 議論はある？
 
