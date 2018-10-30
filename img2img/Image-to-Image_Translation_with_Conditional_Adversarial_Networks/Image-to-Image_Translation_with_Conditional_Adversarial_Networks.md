@@ -35,7 +35,7 @@ image から image へ変換する問題設定（エッジマップからの色�
   - GANのロスは以下のようにした．L1の方がL2よりも画像のボヤけに強いため L1を用いている．
   $$
   \begin{align}
-  Loss &= \mathcal{L}_{cGAN}(G, D) + \lambda \mathcal{L}_{L1}(G) \\
+  Loss &= \mathcal{L}_{cGAN}(G, D) + \lambda \mathcal{L}_{L1}(G) \tag{1}\\
   \text{ここで，}&\\
   \mathcal{L}_{cGAN}(G, D) &= \mathbb{E}_{x, y} [\log D(x, y)] + \mathbb{E}_{x, z} [\log(1-D(x, G(x, z))]\\
   \mathcal{L}_{L1}(G) &= \mathbb{E}_{x, y, z} [\| y - G(x, z) \|_1]
@@ -143,6 +143,34 @@ t_i &= \sum_{j=0}^k n_{i, j}
 $$
 
 ## 目的関数について
+
+式(1) においてどの項が重要なのかを調べる実験をした．
+
+###  質的評価
+
+Fig 4. を見れば分かる通り，L1 のみでは理にかなった結果になるがボヤけてしまっている．またcGANのみ（式(1) において$\lambda=0$ ）ではよりハッキリした結果となるが，artifact がある．そして，L1 + cGAN ではartifact は減少している．
+
+### 量的評価: FCN-score
+
+FCN-score を用いて cityscape データの label -> photo 問題を量的に評価した(表１)．
+GAN-based のロス関数は高いスコアを計測し，合成画像がより認識可能な構造を持つ．
+
+- cGAN とGAN
+  cGANとGAN を比較すると，GAN では入力と出力のミスマッチを罰せず，出力が realistic になるようにすることのみ考える．GAN ではGenerator が入力に関係なく，同一の出力を生成する様に崩壊した（mode collapse）ことが分かった．img2imgの場合，入力と出力のミスマッチを量的に測るロスが必要であると分かった．
+
+- L1 の効果
+
+  L1 loss は入力と出力とのミスマッチを罰するので，出力が入力に応じる様にすることが可能である．実際にL1 + GAN でも realistic なレンダリングという点で効果的であった． L1 + cGAN は同様に性能が良かった．
+
+<img src="figures/table1.png" width=100% align="middle">
+
+
+
+
+
+## Generator architecture
+
+
 
 
 
