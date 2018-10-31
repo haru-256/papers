@@ -164,7 +164,18 @@ GAN-based のロス関数は高いスコアを計測し，合成画像がより�
 
 <img src="figures/table1.png" width=100% align="middle">
 
+### Colorfulness
 
+L1 ロスでは生成画像が灰色っぽくなり，cGAN では画像をよりカラフルにする効果を持つという事をHistgram Intersectionで検証した．
+
+具体的には L1 ロスはありえる色の確率関数からの中央値を選択する事で最小化される．しかし，cGANロスでは，灰色っぽい画像は本物ではないと判定するため，出力の色分布が真の 色分布とマッチする様にする．
+
+<img src="figures/fig7.png" width=100% align="middle">
+
+
+
+- カラーヒストグラム，ヒストグラムインターセクションについて
+  http://aidiary.hatenablog.com/entry/20091003/1254574041
 
 
 
