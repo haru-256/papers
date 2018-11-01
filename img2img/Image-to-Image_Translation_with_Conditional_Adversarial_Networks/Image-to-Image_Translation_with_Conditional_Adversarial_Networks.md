@@ -42,6 +42,7 @@ image から image へ変換する問題設定（エッジマップからの色�
   \end{align}
   $$
   - noize を入れる代わりに  Generatorのいくつかの層に 学習・推論ともに Dropout を適用した．
+    つまり，上式より $z$ に当たるcode は存在しない．
 
 
 
@@ -57,6 +58,7 @@ img2imgの問題では入力と出力では多くの低レベルな情報が共�
 
 __工夫__
 このことを考慮して論文ではU-Net 構造に skip connection を各層 $i$ と $n-i$ の間につけた．skip connection は単に $i$ 層の出力と $n-i$ 層の入力とを全channel 毎に concatenate するものである．
+また，ノイズ $z$ をなくし，ノイズの代わりにDrop out を学習，推論時の両方に適用した．
 
 ### Discriminator
 
@@ -97,7 +99,7 @@ $N$ は画像の大きさよりもずっと小さくても良い画像を生成�
 
 - 推論時においても Generator はDropout を適用し，test batch での統計量を用いてBatch Norm を行う（学習時に計算された指数移動平均を用いない）．つまり，Generator は学習時と同じ振る舞いで推論を行う．
 
-- このbatch normalization についての方法は batch size を 1と設定すると [instance normalization](https://arxiv.org/abs/1607.08022) となり，先行研究より画像生成タスクにおいて効果的ということが分かっている．Instance Norm は以下の図を参照
+- このアプローチ（学習・推論の両方でBatch Norm をかける方法）において batch size を 1と設定すると [instance normalization](https://arxiv.org/abs/1607.08022) となり，先行研究より画像生成タスクにおいて効果的ということが分かっている．Instance Norm は以下の図を参照
 
   <img src="https://blog.albert2005.co.jp/wp-content/uploads/2018/09/groupnorm-gn-zu.png" width=100% align="middle">
 
@@ -181,9 +183,7 @@ L1 ロスでは生成画像が灰色っぽくなり，cGAN では画像をより
 
 ## Generator architecture
 
-
-
-
+U-Net は Encoder-Decoder よりもより realistic な画像を生成する．この優位性はロスがcGAN の時のみではなく，L1 ロスにおいても同様に U-Net は優れた結果を残した．（Fig 5, Table2 参照）
 
 # 議論はある？
 
@@ -196,8 +196,12 @@ L1 ロスでは生成画像が灰色っぽくなり，cGAN では画像をより
 
 # 次に読むべき論文は？
 
-- Wang et al. High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs : https://arxiv.org/abs/1711.11585
+- Wang et al. **High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs**
+   https://arxiv.org/abs/1711.11585
 
   pix2pixHD
+
+- Ulyanov et al. **Instance Normalization: The Missing Ingredient for Fast Stylization**
+  https://arxiv.org/abs/1607.08022
 
 - [Tensor flow の実行例](https://colab.research.google.com/github/tensorflow/tensorflow/blob/master/tensorflow/contrib/eager/python/examples/pix2pix/pix2pix_eager.ipynb)
