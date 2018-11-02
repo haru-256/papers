@@ -57,7 +57,7 @@ __仮説__
 img2imgの問題では入力と出力では多くの低レベルな情報が共有される．例えば colorization では入力と出力では特徴的なエッジの位置を共有する．
 
 __工夫__
-このことを考慮して論文ではU-Net 構造に skip connection を各層 $i$ と $n-i$ の間につけた．skip connection は単に $i$ 層の出力と $n-i$ 層の入力とを全channel 毎に concatenate するものである．
+このことを考慮して論文ではU-Net 構造に skip connection を各層 $i$ と $n-i$ の間につけた．skip connection は単に $i$ 層の出力と $n-i$ 層の出力とをchannel 軸方向に concatenate するものである．
 また，ノイズ $z$ をなくし，ノイズの代わりにDrop out を学習，推論時の両方に適用した．
 
 ### Discriminator
@@ -86,7 +86,7 @@ $N$ は画像の大きさよりもずっと小さくても良い画像を生成�
 
 - 加えて，Discriminator が Generator に対して学習が遅くなる様に，Discriminator を最適化中はロスを$1/2$ 倍した．[コード](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/models/pix2pix_model.py#L81-L82) によれば，Discriminator の最適化は以下の通り
   $$
-  \underset{D}{\operatorname{argmax}} \ \mathbb{E}_{x, y} [\log D(x, y)] + \mathbb{E}_{x, z} [\log(1-D(x, G(x, z))]
+  \underset{D}{\operatorname{argmax}} \ \frac{1}{2} \left\{\mathbb{E}_{x, y} [\log D(x, y)] + \mathbb{E}_{x, z} [\log(1-D(x, G(x, z))]\right\}
   $$
   
 ## Optimizer
@@ -108,6 +108,9 @@ $N$ は画像の大きさよりもずっと小さくても良い画像を生成�
 
 
 # どうやって有効だと検証した？
+
+<span style="color:red; font-weight:bold">注意</span>
+**本論文の実験において，指定がない限りは 70x70 PatchGAN を使用し，ロスは L1 + cGAN である．**
 
 photo generation の様な graphics task  や semantic segmentation の様な vision task を含む様々なデータで検証した．
 
@@ -174,16 +177,30 @@ L1 ロスでは生成画像が灰色っぽくなり，cGAN では画像をより
 
 <img src="figures/fig7.png" width=100% align="middle">
 
-
-
 - カラーヒストグラム，ヒストグラムインターセクションについて
   http://aidiary.hatenablog.com/entry/20091003/1254574041
-
-
 
 ## Generator architecture
 
 U-Net は Encoder-Decoder よりもより realistic な画像を生成する．この優位性はロスがcGAN の時のみではなく，L1 ロスにおいても同様に U-Net は優れた結果を残した．（Fig 5, Table2 参照）
+
+## Discriminator architecture : PatchGAN
+
+PatchGANのDiscriminator の受容野のサイズの変化（from a 1×1 “PixelGAN” to a full 256×256“ImageGAN”）について検証した．（サイズの変化についての実装方法は 6.1.2 参照．単にPathc Sizeに応じてネットワークの深さを変えているだけ．）
+
+結果，最も優れていたのは 70x70 であり，出力画像がsharp であった．（Fig. 6, Table 3 参照）ImageGANでは視覚的改善が見られず，事実FCN-score では70x70 つ比べかなり悪い結果を出した．原因としては，ImageGANでは70x70 PatchGANと比べパラメータ数が膨大で学習が困難であることがあげられる．
+<img src="figures/fig6.png" width=100% align="middle">
+
+PatchGAN の利点はDiscriminator が任意の画像に適用可能だという事．また，論文ではgenerator を畳み込み的に学習時よりもより大きな画像に適用した．論文ではこの方法をmap<->aerial task で検証．256x256 で学習した generator をテスト時には512x512 の画像に適用した．この優位性を論文では512x512 の画像の生成（参照 Fig 8）を用いて示した．
+
+## Perceptual validation
+
+AMT で map<-> aerial task と ImageNet のcolorization について，質的評価を行った．
+
+- map<-> aerial task
+  map2aerial ではL1 + cGAN はL1 ロスと比較してかなりscore（被験者を騙せた割合） が高かった（L1: 0.8% に対してL1 + cGAN : 18.9%）．しかし，aerial2map ではL1+cGAN はL1 とは顕著な違いが見られなかった．これは，aerial はchaotic であるが，mapはわずかな構造の間違い（道路が直線的でない等）が目に見えて明らかであるため．
+- colorization
+  [先行研究](http://richzhang.github.io/colorization/)と比較したところ，先行研究のスコアを上回ることはなかったがそれなりの結果だった（先行研究 : 27.8%, L1+cGAN : 22.5%）．しかし，先行研究は colorization task に特化した手法であることに注意．
 
 # 議論はある？
 
