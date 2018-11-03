@@ -73,6 +73,30 @@ $N$ は画像の大きさよりもずっと小さくても良い画像を生成�
 
 <img src="figures/fig4.png" width=100% align="middle">
 
+### Network architecture の詳細
+Ck は Convolution-BatchNorm-ReLU layer で filter数:k を意味し，CDk は Convolution-BatchNorm-Dropout-ReLU で dropout rate: 0.5, filter数:k  を意味する．全てのConvolution&Deconvolution はstride:2 の kerne lsize:4x4 であり，encoder, discriminator はfactor 2 でdownsampling し，decoder はfactor 2でupsamplingする
+
+- Generator(U-Net) : encoder の $i$ 層の出力とencoder の $n-i$ 層との出力をchannel 方向につなげてencoder $n-i+1$ 層の入力とする．$n$ は総層数．
+
+  - encoder: C64-C128-C256-C512-C512-C512-C512-C512
+  - decoder: CD512-CD1024-CD1024-CD1024-CD1024-CD512-CD256-CD128
+
+  decoderの最後のlayer の後で出力のチャンネル数(e.g. 3) になるように<span style="color:red;">Convolution </span>（kernel size とstride はわからない）が適用され，さらにtanh関数が適用される．また，例外としてencoder の最初の C64 にはBN を適用しない．encoder のすべてのReLU はleaky で slope=0.2，decoder はすべてReLU．
+
+
+  <span style="color:red">**注意**</span>
+  Batch size=1 の場合（U-Netでは推奨）では 画像サイズ 256x256 の場合，上記のU-Net で，bottleneck ではサイズが1x1 になりBN のせいで activation が常に0になってしまう．よって，bottleneck のBN は取り除くのが良い．
+
+- Discriminator(70x70 PatchGAN) : 
+
+  - C64-C128-C256-C512
+
+  最後のC512 の後，1次元出力，つまり出力がチャンネル数 1になるように<span style="color:red;">Convolution </span>（kernel size とstride はわからない）を適用し，その後sigmoid 関数を適用．
+  最初のC64 にはBN を適用しない．すべてのReLU はleaky でslope=0.2．
+
+- Weight Initializer
+  すべての重みは Gaussian ($\mu = 0, \sigma = 0.02​$) で初期化される
+
 
 
 ## Optimization
@@ -89,6 +113,10 @@ $N$ は画像の大きさよりもずっと小さくても良い画像を生成�
   \underset{D}{\operatorname{argmax}} \ \frac{1}{2} \left\{\mathbb{E}_{x, y} [\log D(x, y)] + \mathbb{E}_{x, z} [\log(1-D(x, G(x, z))]\right\}
   $$
   
+### Training
+
+実験で使用したデータは前処理として， Random jitter で256x256を286x286 にresize され，ランダムに256x256 にcropp される． またmirroring を施すこともある．
+
 ## Optimizer
 
 - 本論文では minibatch SGD を使い，Optimizer にはAdam を使用した．ハイパーパラメータとして，
@@ -110,7 +138,7 @@ $N$ は画像の大きさよりもずっと小さくても良い画像を生成�
 # どうやって有効だと検証した？
 
 <span style="color:red; font-weight:bold">注意</span>
-**本論文の実験において，指定がない限りは 70x70 PatchGAN を使用し，ロスは L1 + cGAN である．**
+**本論文の実験において，指定がない限りは 70x70 PatchGAN を使用し，ロスは L1 + cGAN である．また，Table 2 以外のTable ではすべてbatch size=1．Table2 はbatch size=10．実験に応じて変化させているので詳細は論文6.2 参照**．
 
 photo generation の様な graphics task  や semantic segmentation の様な vision task を含む様々なデータで検証した．
 
@@ -201,6 +229,13 @@ AMT で map<-> aerial task と ImageNet のcolorization について，質的評
   map2aerial ではL1 + cGAN はL1 ロスと比較してかなりscore（被験者を騙せた割合） が高かった（L1: 0.8% に対してL1 + cGAN : 18.9%）．しかし，aerial2map ではL1+cGAN はL1 とは顕著な違いが見られなかった．これは，aerial はchaotic であるが，mapはわずかな構造の間違い（道路が直線的でない等）が目に見えて明らかであるため．
 - colorization
   [先行研究](http://richzhang.github.io/colorization/)と比較したところ，先行研究のスコアを上回ることはなかったがそれなりの結果だった（先行研究 : 27.8%, L1+cGAN : 22.5%）．しかし，先行研究は colorization task に特化した手法であることに注意．
+
+## Semantic segmentation
+今までは出力が入力よりも複雑になるケースについて検証してきた．ここで，その逆（出力が入力よりも簡単になる場合）について，セマンティックセグメンテーションを題材に L1ロス, cGANロス, L1 + cGAN ロスの３つで検証した．
+
+結果としてFCN-score が最も良かったのは L1 であり，生成画像を見てもL1よりもcGAN の方が良いとは言い難い．（Fig 10 と Table 6 参照）
+
+
 
 # 議論はある？
 
