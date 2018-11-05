@@ -19,7 +19,6 @@ stylization ネットワークのBatchNormalization を 提案手法（Instance 
 
   <img src="figures/fig1.png">
 
-
 # 先行研究と比べてどこがすごい？
 ## 先行研究の概要と問題点
 
