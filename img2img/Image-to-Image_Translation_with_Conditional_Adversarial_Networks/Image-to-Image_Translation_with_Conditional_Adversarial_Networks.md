@@ -76,18 +76,17 @@ $N$ は画像の大きさよりもずっと小さくても良い画像を生成�
 ### Network architecture の詳細
 Ck は Convolution-BatchNorm-ReLU layer で filter数:k を意味し，CDk は Convolution-BatchNorm-Dropout-ReLU で dropout rate: 0.5, filter数:k  を意味する．全てのConvolution&Deconvolution はstride:2 の kerne lsize:4x4 であり，encoder, discriminator はfactor 2 でdownsampling し，decoder はfactor 2でupsamplingする
 
-- Generator(U-Net) : encoder の $i$ 層の出力とencoder の $n-i$ 層との出力をchannel 方向につなげてencoder $n-i+1$ 層の入力とする．$n$ は総層数．
+- Generator(U-Net) : encoder の $i$ 層の出力とdecoder の $n-i$ 層との出力をchannel 方向につなげてencoder $n-i+1$ 層の入力とする．$n$ は総層数．
 
   - encoder: C64-C128-C256-C512-C512-C512-C512-C512
-  - decoder: CD512-CD1024-CD1024-CD1024-CD1024-CD512-CD256-CD128
+  - decoder: CD512-CD512-CD512-CD512-CD256-CD128-CD64
 
-  decoderの最後のlayer の後で出力のチャンネル数(e.g. 3) になるように<span style="color:red;">Convolution </span>（kernel size とstride はわからない）が適用され，さらにtanh関数が適用される．また，例外としてencoder の最初の C64 にはBN を適用しない．encoder のすべてのReLU はleaky で slope=0.2，decoder はすべてReLU．
-
+  decoderの最後のlayer の後で出力のチャンネル数(e.g. 3) になるように<span style="color:red;">Convolution </span>（kernel size とstride はわからない=> おそらくこれは間違いで<span style="color:red;">Deconvolution </span>のはず）が適用され，さらにtanh関数が適用される．また，例外としてencoder の最初の C64 にはBN を適用しない．encoder のすべてのReLU はleaky で slope=0.2，decoder はすべてReLU．
 
   <span style="color:red">**注意**</span>
   Batch size=1 の場合（U-Netでは推奨）では 画像サイズ 256x256 の場合，上記のU-Net で，bottleneck ではサイズが1x1 になりBN のせいで activation が常に0になってしまう．よって，bottleneck のBN は取り除くのが良い．
 
-- Discriminator(70x70 PatchGAN) : 
+- Discriminator(70x70 PatchGAN) : u
 
   - C64-C128-C256-C512
 
@@ -95,7 +94,8 @@ Ck は Convolution-BatchNorm-ReLU layer で filter数:k を意味し，CDk は C
   最初のC64 にはBN を適用しない．すべてのReLU はleaky でslope=0.2．
 
 - Weight Initializer
-  すべての重みは Gaussian ($\mu = 0, \sigma = 0.02​$) で初期化される
+  重みは Gaussian ($\mu = 0, \sigma = 0.02$) で初期化される．
+  BatchNorm2D の初期値は $\gamma$ は Gaussian ($\mu = 1, \sigma = 0.02$), $\beta$ は$0$ 
 
 
 
