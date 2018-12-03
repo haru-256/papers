@@ -95,3 +95,4 @@ Instance Normalizationが異なる構造のネットワークに有効である�
 1. Ulyanov, D., Lebedev, V., Vedaldi, A., and Lempitsky, V. S. (2016). Texture networks: Feed-forward
   synthesis of textures and stylized images. In Proceedings of the 33nd International Conference
   on Machine Learning, ICML 2016, New York City, NY, USA, June 19-24, 2016, pages 1349–1357.
+
