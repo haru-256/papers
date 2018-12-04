@@ -79,14 +79,29 @@ $$
 \begin{align}
 \min_{G} &\max_{D_1, D_2, D_3} \sum_{k=1}^{3} \mathcal{L}_{GAN} (G, D_k) \\
 \text{ここで, }& \notag\\
-\mathcal{L}_{GAN}(G, D) &= \mathbb{E}_{s, x} [\log D(s, x)] + \mathbb{E}_{s} [\log(1-D(s, G(s))]
+\mathcal{L}_{GAN}(G, D) &= \mathbb{E}_{(s, x)} [\log D(s, x)] + \mathbb{E}_{s} [\log(1-D(s, G(s))]
 \end{align}
 $$
 ここでデータセットは$\{(s_i, x_i)\}$ で与えられているとし，$s_i$ はsemantic label であり，$x_i$ は $s_i$ に対応する画像とした．
 
 ## Improving adversarial loss
 
+本論文では式（1）に feature matching loss based on discriminator を付け加えた．具体的には，Discriminator の複数の層から特徴量を抽出し，real 画像と生成画像の中間表現をマッチするように学習させた．
 
+Discriminator $D_k$ の $i$ 番目の層のfeature extractor を $D_k^{(i)}$ と表すと，feature matching loss $\mathcal{L}_{FM}$ は以下のように定義される．
+$$
+\mathcal{L}_{FM} =  \mathbb{E}_{(s, x)} \sum_{i=1}^T \frac{1}{N_i} \left[ \| D_k^{(i)}(s, x) - D_k^{(i)}(s, G(s)) \|_1 \right]
+$$
+
+ここで，$T$ はDiscriminator の層数であり，$N_i$  は各層の出力の要素数を表す．
+
+よって最終的な目的関数は以下のようになる．
+
+$$
+\min_G \bigg(\Big(\max_{D_1, D_2, D_3} \sum_{k=1}^3 \mathcal{L}_{GAN} (G, D_k) \Big)  + \lambda \sum_{k=1}^3 \mathcal{L}_{FM} (G, D_k)\bigg)
+$$
+
+$\lambda$ は２項の重要度を制御する係数である．
 
 # どうやって有効だと検証した？
 
